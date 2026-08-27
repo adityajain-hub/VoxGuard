@@ -1,0 +1,21 @@
+# Environments
+.env
+venv/
+env/
+__pycache__/
+
+# Node
+node_modules/
+dist/
+build/
+
+# Project Specific Data (DO NOT PUSH TO GITHUB)
+data/
+*.wav
+*.mp3
+*.db
+*.sqlite3
+
+# OS Files
+.DS_Store
+Thumbs.db
