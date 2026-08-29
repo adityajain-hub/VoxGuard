@@ -1,0 +1,8 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+torchaudio
+transformers
+soundfile
+librosa
+scipy
+numpy
