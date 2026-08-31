@@ -1,10 +1,11 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 import datetime
 import os
 
-DATABASE_URL = "sqlite:///../data/database.db"
+BASE_DIR = os.path.dirname(__file__)
+DATABASE_PATH = os.path.join(BASE_DIR, "..", "data", "database.db")
+DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -24,21 +25,37 @@ Base.metadata.create_all(bind=engine)
 
 def save_scan(filename, deepfake_prob, speaker_match, action_taken):
     db = SessionLocal()
-    scan = ScanHistory(
-        filename=filename,
-        deepfake_prob=deepfake_prob,
-        speaker_match=speaker_match,
-        action_taken=action_taken
-    )
-    db.add(scan)
-    db.commit()
-    db.refresh(scan)
-    db.close()
-    return scan
+    try:
+        scan = ScanHistory(
+            filename=filename,
+            deepfake_prob=deepfake_prob,
+            speaker_match=speaker_match,
+            action_taken=action_taken
+        )
+        db.add(scan)
+        db.commit()
+        db.refresh(scan)
+        return scan
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
 def get_recent_scans():
     db = SessionLocal()
-    scans = db.query(ScanHistory).order_by(ScanHistory.id.desc()).limit(20).all()
-    db.close()
-    return scans
-
+    try:
+        scans = db.query(ScanHistory).order_by(ScanHistory.id.desc()).limit(20).all()
+        return [
+            {
+                "id": scan.id,
+                "filename": scan.filename,
+                "deepfake_prob": scan.deepfake_prob,
+                "speaker_match": scan.speaker_match,
+                "action_taken": scan.action_taken,
+                "timestamp": scan.timestamp
+            }
+            for scan in scans
+        ]
+    finally:
+        db.close()

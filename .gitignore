@@ -1,20 +1,21 @@
-# Python Virtual Environment
+# Environments
+.env
 venv/
 env/
-.env
+__pycache__/
 
-# Data and Models
-data/raw/*
-data/processed/*
-!data/raw/.gitkeep
-!data/processed/.gitkeep
-models/*
-!models/.gitkeep
-
-# Node/React
+# Node
 node_modules/
 dist/
-.DS_Store
+build/
 
-# Jupyter
-.ipynb_checkpoints
+# Project Specific Data (DO NOT PUSH TO GITHUB)
+data/
+*.wav
+*.mp3
+*.db
+*.sqlite3
+
+# OS Files
+.DS_Store
+Thumbs.db
