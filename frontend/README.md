@@ -1,32 +1,39 @@
-# React + TypeScript + Vite
+# VoxGuard Frontend - Synthetic Voice Detector
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+This is the React frontend for the VoxGuard Synthetic Voice Detection system, built with Vite, TypeScript, and Tailwind CSS.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The frontend interface provides three distinct modes for analyzing audio for deepfakes and AI-generated voices:
 
-## React Compiler
+1. **Upload Audio**: Upload existing audio files (`.wav`, `.mp3`, `.flac`, etc.) directly to the forensic backend for deep ML analysis and Explainable AI (XAI) spectrogram generation.
+2. **Record Mic (Forensic Analysis)**: Records a high-quality microphone clip directly in your browser. When you stop recording, it automatically packages it into a `.wav` file and sends it to the forensic backend. The results are permanently saved in your history along with a visual spectrogram.
+3. **Live Intercept (Real-Time Monitor)**: Acts as a real-time threat monitor for active phone calls or voice chats. It uses an in-browser `AudioWorklet` to stream your raw microphone audio to a backend WebSocket (`/ws/analyze/live`). Every 2 seconds, the dashboard flashes instant updates on the speaker's "Deepfake Probability" and "Risk Score" without cluttering the database.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Architecture & Tech Stack
 
-## Expanding the Oxlint configuration
+- **Framework**: React 18
+- **Build Tool**: Vite
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Audio Processing**: Web Audio API (`AudioContext`, `AudioWorklet`) for precise raw PCM capture and custom WAV encoding directly in the browser.
+- **Icons**: Lucide React
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Setup & Running
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+1. Install dependencies:
+```bash
+npm install
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+2. Start the development server:
+```bash
+npm run dev
+```
+
+> **Note**: The frontend expects the FastAPI backend to be running on `http://localhost:8000`. Ensure you have started the backend and installed its requirements (including `slowapi` and `websockets`) before analyzing audio.
+
+## Audio Processing Implementation
+
+To bypass the limitations of standard browser `MediaRecorder` (which natively outputs lossy `.webm` chunks that crash `soundfile`), this frontend uses a custom `public/audio-processor.js` Worklet. 
+This captures raw `Float32Array` PCM audio frames, allowing the frontend to dynamically encode perfect binary `.wav` files in memory before transmitting them to the backend's API and WebSocket endpoints.

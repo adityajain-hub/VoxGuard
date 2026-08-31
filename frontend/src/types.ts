@@ -1,13 +1,16 @@
 export interface AnalysisResult {
   id: string;
   fileName: string;
-  timestamp: Date;
+  timestamp: string; // ISO String for easier localStorage handling
   isSynthetic: boolean;
   confidence: number;
+  spectrogramUrl?: string;
   metrics: {
-    spectrogram: number;
-    pitchConsistency: number;
-    noiseArtifacts: number;
+    speakerMatchScore: number;
+    metadataRiskFlag: boolean;
+    overallRiskScore: number;
+    label: string;
+    recommendedAction: string;
   };
 }
 
