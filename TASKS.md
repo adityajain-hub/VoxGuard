@@ -74,10 +74,45 @@ ws.onmessage = (e) => {
 
 ---
 
-## 🟨 Laptop C (ML Engineer) — ✅ COMPLETED
+## 🟨 Laptop C (ML)
 
-All ML work is done:
+**Status:** 🟡 **URGENT ACTION REQUIRED**
 
+Your ML logic works perfectly in isolation, but there is a critical caching bug in `ml/inference.py` that breaks the Dual-Model Architecture when the Backend runs the Fast Model and Heavy Model concurrently.
+
+#### 🔴 Urgent Fix Required: Dictionary Caching
+Currently, `_DEFAULT_DETECTOR` is a single global variable. If the WebSockets (Fast Model) and Forensic Uploads (Heavy Model) are hit at the same time, your code will constantly destroy and reload Gigabytes of models into RAM, crashing the server.
+
+**Please change lines 421-427 in `ml/inference.py`:**
+
+**FROM:**
+```python
+_DEFAULT_DETECTOR: Optional[DeepfakeVoiceDetector] = None
+
+def get_detector(model_name: Optional[str] = None) -> DeepfakeVoiceDetector:
+    """Returns or initializes a singleton DeepfakeVoiceDetector instance."""
+    global _DEFAULT_DETECTOR
+    if _DEFAULT_DETECTOR is None or (model_name and _DEFAULT_DETECTOR.model_name != model_name):
+        _DEFAULT_DETECTOR = DeepfakeVoiceDetector(model_name=model_name)
+    return _DEFAULT_DETECTOR
+```
+
+**TO:**
+```python
+_DETECTORS: dict = {}
+
+def get_detector(model_name: Optional[str] = None) -> DeepfakeVoiceDetector:
+    """Returns or initializes a cached DeepfakeVoiceDetector instance."""
+    global _DETECTORS
+    # Resolve the default model name if none is provided
+    target_name = model_name or DeepfakeVoiceDetector.PRIMARY_MODEL
+    
+    if target_name not in _DETECTORS:
+        _DETECTORS[target_name] = DeepfakeVoiceDetector(model_name=target_name)
+    return _DETECTORS[target_name]
+```
+
+#### ✅ Previously Completed
 - [x] `inference.py` — Deepfake voice detection using HuggingFace Wav2Vec2
 - [x] `spectrogram.py` — XAI heatmap visualization generator
 - [x] `telecom_noise.py` — Audiomentations noise simulator
