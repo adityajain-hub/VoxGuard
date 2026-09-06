@@ -180,14 +180,14 @@ export default function Home() {
         chunkBufferRef.current = newBuffer;
         
         if (chunkBufferRef.current.length >= 32000) {
-          const wavBlob = encodeWAV(chunkBufferRef.current, 16000);
+          const wavBlob = encodeWAV(chunkBufferRef.current, audioContext.sampleRate);
           wsRef.current.send(wavBlob);
           chunkBufferRef.current = new Float32Array(0);
         }
       };
       
       source.connect(workletNode);
-      workletNode.connect(audioContext.destination);
+      // Removed workletNode.connect(audioContext.destination) to prevent feedback loop
       setIsLiveIntercepting(true);
     } catch (err: any) {
       console.error("Error:", err);
@@ -236,7 +236,7 @@ export default function Home() {
       };
       
       source.connect(workletNode);
-      workletNode.connect(audioContext.destination);
+      // Removed workletNode.connect(audioContext.destination) to prevent feedback loop
       setIsForensicRecording(true);
     } catch (err: any) {
       console.error("Error:", err);
@@ -246,7 +246,7 @@ export default function Home() {
 
   const stopForensicRecording = () => {
     if (fullBufferRef.current.length > 0) {
-      const wavBlob = encodeWAV(fullBufferRef.current, 16000);
+      const wavBlob = encodeWAV(fullBufferRef.current, audioContextRef.current?.sampleRate || 16000);
       const recordedFile = new File([wavBlob], `Forensic_${new Date().toISOString().slice(11, 19).replace(/:/g, '-')}.wav`, { type: 'audio/wav' });
       setFile(recordedFile);
       setAudioUrl(URL.createObjectURL(recordedFile));
@@ -548,28 +548,42 @@ export default function Home() {
           {result && (
             <div className="bg-white rounded-sm shadow-none border-b-2 border-r-2 border-slate-300 border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className={`p-6 border-b ${
-                result.isSynthetic ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'
+                result.metrics.label === 'LISTENING_SILENCE' || result.metrics.label === 'AWAITING_SPEECH'
+                  ? 'bg-blue-50 border-blue-100'
+                  : result.isSynthetic ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'
               }`}>
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      {result.isSynthetic ? (
+                      {result.metrics.label === 'LISTENING_SILENCE' || result.metrics.label === 'AWAITING_SPEECH' ? (
+                        <Activity className="text-blue-600" size={28} />
+                      ) : result.isSynthetic ? (
                         <AlertTriangle className="text-red-600" size={28} />
                       ) : (
                         <CheckCircle className="text-green-600" size={28} />
                       )}
-                      <h2 className={`text-2xl font-black ${result.isSynthetic ? 'text-red-700' : 'text-green-700'}`}>
-                        {result.isSynthetic ? 'SYNTHETIC VOICE' : 'REAL HUMAN VOICE'}
+                      <h2 className={`text-2xl font-black ${
+                        result.metrics.label === 'LISTENING_SILENCE' || result.metrics.label === 'AWAITING_SPEECH'
+                          ? 'text-blue-700'
+                          : result.isSynthetic ? 'text-red-700' : 'text-green-700'
+                      }`}>
+                        {result.metrics.label === 'LISTENING_SILENCE' || result.metrics.label === 'AWAITING_SPEECH' 
+                          ? 'LISTENING FOR VOICE...' 
+                          : result.isSynthetic ? 'SYNTHETIC VOICE' : 'REAL HUMAN VOICE'}
                       </h2>
                     </div>
                     <p className="text-sm text-slate-600 font-medium">Analyzed: {result.fileName}</p>
                   </div>
                   <div className="text-right">
                     <div className="text-3xl font-mono font-bold tracking-tighter text-slate-900">
-                      {((result.confidence < 0 ? 0 : (result.isSynthetic ? result.confidence : (1 - result.confidence))) * 100).toFixed(1)}%
+                      {result.metrics.label === 'LISTENING_SILENCE' || result.metrics.label === 'AWAITING_SPEECH' 
+                        ? '--%'
+                        : `${((result.confidence < 0 ? 0 : (result.isSynthetic ? result.confidence : (1 - result.confidence))) * 100).toFixed(1)}%`}
                     </div>
                     <div className="text-sm text-slate-500 font-medium uppercase tracking-wide">
-                      {result.isSynthetic ? 'Deepfake Confidence' : 'Authentic (Real Voice) Confidence'}
+                      {result.metrics.label === 'LISTENING_SILENCE' || result.metrics.label === 'AWAITING_SPEECH' 
+                        ? 'Awaiting Input'
+                        : result.isSynthetic ? 'Deepfake Confidence' : 'Authentic (Real Voice) Confidence'}
                     </div>
                   </div>
                 </div>
