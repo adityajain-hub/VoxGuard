@@ -218,8 +218,8 @@ async def websocket_live_analyze(websocket: WebSocket):
 
             # 5. Run ML inference directly on the in-memory NumPy array
             try:
-                # Request the fast alternative model for real-time WebSocket inference
-                result = predict(audio_buffer, model_name="MelodyMachine/Deepfake-audio-detection-V2")
+                # Use the primary highly-accurate model now that caching is fixed!
+                result = predict(audio_buffer, model_name="garystafford/wav2vec2-deepfake-voice-detector")
 
                 deepfake_prob = result.get("deepfake_probability", 0.0)
                 speaker_match_score = result.get("speaker_match_score", 0.12)
