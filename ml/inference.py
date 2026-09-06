@@ -70,15 +70,29 @@ def load_and_resample_audio(
         try:
             data, sr = sf.read(str(file_path), dtype="float32")
         except Exception as sf_err:
-            if librosa is not None:
-                data, sr = librosa.load(str(file_path), sr=None, mono=False)
-            elif torchaudio is not None:
-                tensor, sr = torchaudio.load(str(file_path))
-                data = tensor.numpy()
-            else:
-                raise RuntimeError(
-                    f"Failed to read audio file '{file_path}'. Error: {sf_err}"
-                )
+            try:
+                import miniaudio
+                if file_path.suffix.lower() == '.mp3':
+                    d = miniaudio.mp3_read_file_f32(str(file_path))
+                else:
+                    d = miniaudio.decode_file(str(file_path), output_format=miniaudio.SampleFormat.FLOAT32, nchannels=2)
+                data = np.array(d.samples, dtype=np.float32)
+                if d.nchannels > 1:
+                    data = data.reshape(-1, d.nchannels)
+                sr = d.sample_rate
+            except Exception as ma_err:
+                if torchaudio is not None:
+                    tensor, sr = torchaudio.load(str(file_path))
+                    # torchaudio returns [channels, frames], sf/librosa expect [frames, channels] or [frames]
+                    data = tensor.numpy().T
+                    if data.shape[1] == 1:
+                        data = data.squeeze(-1)
+                elif librosa is not None:
+                    data, sr = librosa.load(str(file_path), sr=None, mono=False)
+                else:
+                    raise RuntimeError(
+                        f"Failed to read audio file '{file_path}'. SF Error: {sf_err}, Miniaudio Error: {ma_err}"
+                    )
 
     elif isinstance(audio_input, (bytes, io.BytesIO)):
         bio = io.BytesIO(audio_input) if isinstance(audio_input, bytes) else audio_input
