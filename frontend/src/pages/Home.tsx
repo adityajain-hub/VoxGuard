@@ -30,6 +30,7 @@ export default function Home() {
             timestamp: item.timestamp,
             isSynthetic: item.deepfake_prob > 0.5,
             confidence: item.deepfake_prob,
+            spectrogramUrl: item.spectrogram_url ? `http://localhost:8000${item.spectrogram_url}` : undefined,
             metrics: {
               speakerMatchScore: item.speaker_match,
               metadataRiskFlag: false, // Defaulting as not saved in db
@@ -188,9 +189,9 @@ export default function Home() {
       source.connect(workletNode);
       workletNode.connect(audioContext.destination);
       setIsLiveIntercepting(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error:", err);
-      alert("Could not start Live Intercept.");
+      alert(`Could not start Live Intercept: ${err.message || err}`);
       setStep('idle');
     }
   };
@@ -237,9 +238,9 @@ export default function Home() {
       source.connect(workletNode);
       workletNode.connect(audioContext.destination);
       setIsForensicRecording(true);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error:", err);
-      alert("Could not start Forensic Recording.");
+      alert(`Could not start Forensic Recording: ${err.message || err}`);
     }
   };
 
@@ -322,18 +323,18 @@ export default function Home() {
     const currentIndex = steps.findIndex(s => s.id === step);
     
     return (
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 mt-6 animate-in fade-in">
+      <div className="bg-white p-6 rounded-sm shadow-none border-b-2 border-r-2 border-slate-300 border border-slate-200 mt-6 animate-in fade-in">
         <div className="flex items-center justify-between">
           {steps.map((s, idx) => (
             <div key={s.id} className="flex flex-col items-center flex-1">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-colors ${
+              <div className={`w-10 h-10 rounded-sm flex items-center justify-center mb-2 transition-colors ${
                 idx < currentIndex ? 'bg-green-500 text-white' : 
-                idx === currentIndex ? 'bg-blue-600 text-white animate-pulse' : 
-                'bg-gray-100 text-gray-400'
+                idx === currentIndex ? 'bg-indigo-900 text-white animate-pulse' : 
+                'bg-slate-100 text-slate-400'
               }`}>
                 {idx < currentIndex ? <CheckCircle size={20} /> : <Activity size={20} />}
               </div>
-              <span className={`text-sm font-medium ${idx <= currentIndex ? 'text-gray-900' : 'text-gray-400'}`}>
+              <span className={`text-sm font-medium ${idx <= currentIndex ? 'text-slate-900' : 'text-slate-400'}`}>
                 {s.label}
               </span>
             </div>
@@ -344,13 +345,13 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans p-6 md:p-8 lg:p-12">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans tracking-tight p-6 md:p-8 lg:p-12">
       <header className="max-w-7xl mx-auto mb-10">
-        <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 flex items-center gap-3">
-          <Activity className="text-blue-600" size={32} />
-          Synthetic Voice <span className="text-blue-600">Detector</span>
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-3">
+          <Activity className="text-indigo-900" size={32} />
+          Synthetic Voice <span className="text-indigo-900">Detector</span>
         </h1>
-        <p className="text-gray-600 mt-2">Upload or record audio to detect deepfakes and AI-generated voices.</p>
+        <p className="text-slate-600 mt-2">Upload or record audio to detect deepfakes and AI-generated voices.</p>
       </header>
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
@@ -358,38 +359,38 @@ export default function Home() {
         {/* Left Column */}
         <div className="lg:col-span-6 xl:col-span-5 space-y-6">
           
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+          <div className="bg-white p-6 rounded-sm shadow-none border-b-2 border-r-2 border-slate-300 border border-slate-200">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2">
               <button 
                 onClick={() => !isForensicRecording && !isLiveIntercepting && fileInputRef.current?.click()}
                 disabled={isForensicRecording || isLiveIntercepting}
-                className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl transition-all group ${
+                className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-sm transition-all group ${
                   isForensicRecording || isLiveIntercepting
-                    ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed' 
-                    : 'border-gray-300 hover:bg-gray-50 hover:border-blue-400'
+                    ? 'border-slate-200 bg-slate-50 opacity-50 cursor-not-allowed' 
+                    : 'border-slate-300 hover:bg-slate-50 hover:border-indigo-600'
                 }`}
               >
-                <UploadCloud size={32} className={`mb-3 ${isForensicRecording || isLiveIntercepting ? 'text-gray-300' : 'text-gray-400 group-hover:text-blue-500'}`} />
-                <span className="font-semibold text-gray-700 text-sm text-center">Upload Audio</span>
-                <span className="text-xs text-gray-500 mt-1 text-center">WAV, MP3, FLAC</span>
+                <UploadCloud size={32} className={`mb-3 ${isForensicRecording || isLiveIntercepting ? 'text-slate-300' : 'text-slate-400 group-hover:text-indigo-700'}`} />
+                <span className="font-semibold text-slate-700 text-sm text-center">Upload Audio</span>
+                <span className="text-xs text-slate-500 mt-1 text-center">WAV, MP3, FLAC</span>
               </button>
               
               <button 
                 onClick={isForensicRecording ? stopForensicRecording : startForensicRecording}
                 disabled={isLiveIntercepting}
-                className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl transition-all group ${
+                className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-sm transition-all group ${
                   isLiveIntercepting
-                    ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
+                    ? 'border-slate-200 bg-slate-50 opacity-50 cursor-not-allowed'
                     : isForensicRecording 
                     ? 'border-red-500 bg-red-50 hover:bg-red-100' 
-                    : 'border-gray-300 hover:bg-gray-50 hover:border-red-400'
+                    : 'border-slate-300 hover:bg-slate-50 hover:border-red-400'
                 }`}
               >
                 {isForensicRecording ? (
                   <>
                     <div className="relative mb-3">
                       <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-75"></div>
-                      <div className="relative bg-red-500 rounded-full p-2 text-white shadow-md">
+                      <div className="relative bg-red-500 rounded-full p-2 text-white shadow-none">
                         <Mic size={20} />
                       </div>
                     </div>
@@ -398,9 +399,9 @@ export default function Home() {
                   </>
                 ) : (
                   <>
-                    <Mic size={32} className="text-gray-400 group-hover:text-red-500 mb-3" />
-                    <span className="font-semibold text-gray-700 text-sm text-center">Record Mic</span>
-                    <span className="text-xs text-gray-500 mt-1 text-center">Forensic Analysis</span>
+                    <Mic size={32} className="text-slate-400 group-hover:text-red-500 mb-3" />
+                    <span className="font-semibold text-slate-700 text-sm text-center">Record Mic</span>
+                    <span className="text-xs text-slate-500 mt-1 text-center">Forensic Analysis</span>
                   </>
                 )}
               </button>
@@ -408,19 +409,19 @@ export default function Home() {
               <button 
                 onClick={isLiveIntercepting ? stopLiveIntercept : startLiveIntercept}
                 disabled={isForensicRecording}
-                className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl transition-all group ${
+                className={`flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-sm transition-all group ${
                   isForensicRecording
-                    ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
+                    ? 'border-slate-200 bg-slate-50 opacity-50 cursor-not-allowed'
                     : isLiveIntercepting 
                     ? 'border-green-500 bg-green-50 hover:bg-green-100' 
-                    : 'border-gray-300 hover:bg-gray-50 hover:border-green-400'
+                    : 'border-slate-300 hover:bg-slate-50 hover:border-green-400'
                 }`}
               >
                 {isLiveIntercepting ? (
                   <>
                     <div className="relative mb-3">
                       <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-75"></div>
-                      <div className="relative bg-green-500 rounded-full p-2 text-white shadow-md">
+                      <div className="relative bg-green-500 rounded-full p-2 text-white shadow-none">
                         <Activity size={20} />
                       </div>
                     </div>
@@ -429,9 +430,9 @@ export default function Home() {
                   </>
                 ) : (
                   <>
-                    <Activity size={32} className="text-gray-400 group-hover:text-green-500 mb-3" />
-                    <span className="font-semibold text-gray-700 text-sm text-center">Live Intercept</span>
-                    <span className="text-xs text-gray-500 mt-1 text-center">Real-Time Monitor</span>
+                    <Activity size={32} className="text-slate-400 group-hover:text-green-500 mb-3" />
+                    <span className="font-semibold text-slate-700 text-sm text-center">Live Intercept</span>
+                    <span className="text-xs text-slate-500 mt-1 text-center">Real-Time Monitor</span>
                   </>
                 )}
               </button>
@@ -446,9 +447,9 @@ export default function Home() {
             />
             
             {audioUrl && (
-              <div className="space-y-4 mt-6 pt-6 border-t border-gray-100 animate-in fade-in duration-500">
+              <div className="space-y-4 mt-6 pt-6 border-t border-slate-100 animate-in fade-in duration-500">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Preview: {file?.name}</h3>
+                  <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Preview: {file?.name}</h3>
                 </div>
                 
                 <WaveformPlayer audioUrl={audioUrl} />
@@ -457,10 +458,10 @@ export default function Home() {
                   <button 
                     onClick={handleAnalyze}
                     disabled={step !== 'idle' && step !== 'complete'}
-                    className={`w-full py-3 rounded-xl font-bold text-white transition-all flex items-center justify-center gap-2 ${
+                    className={`w-full py-3 rounded-sm font-bold text-white transition-all flex items-center justify-center gap-2 ${
                       step !== 'idle' && step !== 'complete'
-                        ? 'bg-blue-400 cursor-not-allowed' 
-                        : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'
+                        ? 'bg-indigo-600 cursor-not-allowed' 
+                        : 'bg-indigo-900 hover:bg-blue-700 shadow-md hover:shadow-lg'
                     }`}
                   >
                     <Activity size={20} />
@@ -471,19 +472,19 @@ export default function Home() {
             )}
           </div>
 
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+          <div className="bg-white p-6 rounded-sm shadow-none border-b-2 border-r-2 border-slate-300 border border-slate-200">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                <Clock size={20} className="text-gray-400" />
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Clock size={20} className="text-slate-400" />
                 Recent Scans
               </h3>
-              <Link to="/history" className="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+              <Link to="/history" className="text-sm font-semibold text-indigo-900 hover:text-blue-800 transition-colors">
                 View All &rarr;
               </Link>
             </div>
             
             {history.length === 0 ? (
-              <div className="text-center py-6 text-gray-500 bg-gray-50 rounded-xl border border-gray-100 border-dashed">
+              <div className="text-center py-6 text-slate-500 bg-slate-50 rounded-sm border border-slate-100 border-dashed">
                 <p className="text-sm">No recent scans.</p>
                 <p className="text-xs mt-1">Upload a file to see history.</p>
               </div>
@@ -492,19 +493,19 @@ export default function Home() {
                 {history.slice(0, 5).map((item) => {
                   const date = new Date(item.timestamp);
                   return (
-                    <div key={item.id} className="group p-3 rounded-xl border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-colors cursor-pointer flex items-center justify-between">
+                    <div key={item.id} onClick={() => { setResult(item); setStep('complete'); }} className="group p-3 rounded-sm border border-slate-100 hover:border-blue-200 hover:bg-indigo-50 transition-colors cursor-pointer flex items-center justify-between">
                       <div className="flex items-center gap-3 overflow-hidden">
-                        <div className={`w-2 h-10 rounded-full flex-shrink-0 ${item.isSynthetic ? 'bg-red-500' : 'bg-green-500'}`}></div>
+                        <div className={`w-2 h-10 rounded-none flex-shrink-0 ${item.isSynthetic ? 'bg-red-500' : 'bg-green-500'}`}></div>
                         <div className="truncate">
-                          <p className="text-sm font-semibold text-gray-900 truncate" title={item.fileName}>
+                          <p className="text-sm font-semibold text-slate-900 truncate" title={item.fileName}>
                             {item.fileName}
                           </p>
-                          <p className="text-xs text-gray-500">
-                            {date.toLocaleDateString()} at {date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • {(item.confidence * 100).toFixed(0)}%
+                          <p className="text-xs text-slate-500">
+                            {date.toLocaleDateString()} at {date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • {((item.confidence < 0 ? 0 : (item.isSynthetic ? item.confidence : 1 - item.confidence)) * 100).toFixed(0)}%
                           </p>
                         </div>
                       </div>
-                      <ChevronRight size={16} className="text-gray-400 group-hover:text-blue-500 flex-shrink-0" />
+                      <ChevronRight size={16} className="text-slate-400 group-hover:text-indigo-700 flex-shrink-0" />
                     </div>
                   );
                 })}
@@ -517,27 +518,27 @@ export default function Home() {
         {/* Right Column (Spectrogram & Results) */}
         <div className="lg:col-span-6 xl:col-span-7 space-y-6">
           
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col h-72">
-            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <BarChart2 size={20} className="text-gray-400" />
+          <div className="bg-white p-6 rounded-sm shadow-none border-b-2 border-r-2 border-slate-300 border border-slate-200 flex flex-col h-[600px]">
+            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <BarChart2 size={20} className="text-slate-400" />
               ML Spectrogram Analysis
             </h3>
             
-            <div className="w-full flex-grow bg-gray-900 rounded-xl flex items-center justify-center border border-gray-800 shadow-inner overflow-hidden relative">
+            <div className="w-full flex-grow bg-slate-900 rounded-sm flex items-center justify-center border border-slate-800 shadow-none overflow-hidden relative">
               {result ? (
                 result.spectrogramUrl ? (
-                  <img src={result.spectrogramUrl} alt="Spectrogram" className="w-full h-full object-cover opacity-80" />
+                  <img src={result.spectrogramUrl} alt="Spectrogram" className="w-full h-full object-contain opacity-80" />
                 ) : (
                   <div className="text-center space-y-2 animate-in fade-in">
-                    <p className="text-blue-400 font-mono text-sm">No Spectrogram Available</p>
+                    <p className="text-indigo-600 font-mono text-sm">No Spectrogram Available</p>
                   </div>
                 )
               ) : step !== 'idle' ? (
-                <div className="text-blue-400 font-mono text-sm animate-pulse flex items-center gap-2">
+                <div className="text-indigo-600 font-mono text-sm animate-pulse flex items-center gap-2">
                   <Activity size={16} /> Generating Spectrogram...
                 </div>
               ) : (
-                <p className="text-gray-500 font-medium text-sm">Waiting for audio upload...</p>
+                <p className="text-slate-500 font-medium text-sm">Waiting for audio upload...</p>
               )}
             </div>
           </div>
@@ -545,7 +546,7 @@ export default function Home() {
           {renderProgress()}
 
           {result && (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white rounded-sm shadow-none border-b-2 border-r-2 border-slate-300 border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className={`p-6 border-b ${
                 result.isSynthetic ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'
               }`}>
@@ -561,19 +562,21 @@ export default function Home() {
                         {result.isSynthetic ? 'SYNTHETIC VOICE' : 'REAL HUMAN VOICE'}
                       </h2>
                     </div>
-                    <p className="text-sm text-gray-600 font-medium">Analyzed: {result.fileName}</p>
+                    <p className="text-sm text-slate-600 font-medium">Analyzed: {result.fileName}</p>
                   </div>
                   <div className="text-right">
-                    <div className="text-3xl font-black text-gray-900">
-                      {(result.confidence * 100).toFixed(1)}%
+                    <div className="text-3xl font-mono font-bold tracking-tighter text-slate-900">
+                      {((result.confidence < 0 ? 0 : (result.isSynthetic ? result.confidence : (1 - result.confidence))) * 100).toFixed(1)}%
                     </div>
-                    <div className="text-sm text-gray-500 font-medium uppercase tracking-wide">Confidence</div>
+                    <div className="text-sm text-slate-500 font-medium uppercase tracking-wide">
+                      {result.isSynthetic ? 'Deepfake Confidence' : 'Authentic (Real Voice) Confidence'}
+                    </div>
                   </div>
                 </div>
               </div>
               
               <div className="p-6 bg-white">
-                <h3 className="text-lg font-bold mb-4 text-gray-800">Model Metrics Breakdown</h3>
+                <h3 className="text-lg font-bold mb-4 text-slate-800">Model Metrics Breakdown</h3>
                 
                 <div className="space-y-5">
                   {[
@@ -583,22 +586,22 @@ export default function Home() {
                   ].map((metric) => (
                     <div key={metric.label}>
                       <div className="flex justify-between text-sm font-medium mb-1">
-                        <span className="text-gray-700">{metric.label}</span>
-                        <span className="text-gray-900">{metric.displayValue}</span>
+                        <span className="text-slate-700 uppercase tracking-wider text-xs">{metric.label}</span>
+                        <span className="text-slate-900 font-mono tracking-tighter">{metric.displayValue}</span>
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2.5">
+                      <div className="w-full bg-slate-100 rounded-none h-2.5">
                         <div 
-                          className={`h-2.5 rounded-full ${metric.value > 0.5 ? 'bg-red-500' : 'bg-green-500'}`} 
+                          className={`h-2.5 rounded-none ${metric.value > 0.5 ? 'bg-red-500' : 'bg-green-500'}`} 
                           style={{ width: `${Math.max(5, metric.value * 100)}%` }}
                         ></div>
                       </div>
                     </div>
                   ))}
                   
-                  <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                    <p className="text-sm text-gray-500 font-semibold mb-1 uppercase tracking-wider">Recommended Action</p>
-                    <p className="text-md font-bold text-gray-900">{result.metrics.recommendedAction}</p>
-                    <p className="text-xs text-gray-500 mt-2">Label: {result.metrics.label}</p>
+                  <div className="mt-4 p-4 bg-slate-50 rounded-sm border border-slate-200">
+                    <p className="text-sm text-slate-500 font-semibold mb-1 uppercase tracking-wider">Recommended Action</p>
+                    <p className="text-md font-bold text-slate-900">{result.metrics.recommendedAction}</p>
+                    <p className="text-xs text-slate-500 mt-2">Label: {result.metrics.label}</p>
                   </div>
                 </div>
               </div>
