@@ -46,10 +46,10 @@ export default function WaveformPlayer({ audioUrl }: WaveformPlayerProps) {
   };
 
   return (
-    <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+    <div className="flex items-center gap-4 bg-mt-bg p-4 rounded-xl border border-gray-200 shadow-none">
       <button
         onClick={togglePlay}
-        className="w-12 h-12 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors flex-shrink-0"
+        className="w-12 h-12 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-mt-bg rounded-full transition-colors flex-shrink-0"
       >
         {isPlaying ? <Pause size={24} /> : <Play size={24} className="ml-1" />}
       </button>
